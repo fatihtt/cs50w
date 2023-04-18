@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Search</title>
+        <style>
+            body {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
+            .div-head {
+                display: flex;
+                width: 100%;
+                justify-content: flex-end;
+                gap: 40px;
+            }
+            .div-main {
+                height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            form {
+                display: flex;
+                flex-direction: column;
+                gap:20px;
+                justify-content: center;
+                align-items: center;
+            }
+            form > input[type=text] {
+                padding: 5px 10px;
+                width: 582px;
+                height: 46px;
+                border-radius: 40px;
+                border: 1px solid gray;
+            }
+            form > input[type=submit] {
+                width: 150px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="div-head">
+            <a href="image.html">Image Search</a>
+            <a href="advanced.html">Advanced Search</a>
+        </div>
+        <div class="div-main">
+            <form action="https://google.com/search">
+                <input type="text" name="q">
+                <input type="submit" value="Google Search">
+            </form>
+        </div>
+    </body>
+</html>
