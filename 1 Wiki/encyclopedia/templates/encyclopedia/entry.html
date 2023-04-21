@@ -1,0 +1,24 @@
+{% extends "encyclopedia/layout.html" %}
+
+{% block title %}
+    Encyclopedia
+{% endblock %}
+{% block head %}
+    <style>
+        .p-edit {
+            text-align: right;
+            margin-right: 50px;
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+
+    <p>
+        {{ entry | safe }}
+    </p>
+    <p class="p-edit">
+        <a href="edit-entry?q={{ title }}">Edit</a>
+    </p>
+
+{% endblock %}

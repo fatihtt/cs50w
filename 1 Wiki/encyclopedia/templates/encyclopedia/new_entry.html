@@ -1,0 +1,38 @@
+{% extends "encyclopedia/layout.html" %}
+
+{% block title %}
+    Encyclopedia
+{% endblock %}
+{% block head %}
+<style>
+    textarea {
+        height: 500px;
+        resize: none;
+    }
+    .form-new-entry input[type=text] {
+        min-width: 300px;
+        padding: 5px 20px;
+    }
+    form div {
+        margin: 30px;
+    }
+    .message {
+        margin: 20px 40px;
+        color: red;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+    <h1>{{ title }}</h1>
+    {% if message %}
+        <div class="message">{{ message }}</div>
+    {% endif %}
+    <form class="form-new-entry" action="{{ action }}" method="post">
+        {% csrf_token %}
+        <div><input type="text" name="title" id="title" placeholder="Title" {{ disable }} value="{{edit_title}}"></div>
+        <div><textarea name="entry" id="entry" cols="30" rows="5">{{ edit_content }}</textarea></div>
+        <div><input type="submit" value="Kaydet"></div>
+    </form>
+
+{% endblock %}
