@@ -3,9 +3,17 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+from django.db.models import Count
 
-from .models import User, Listing, Category, Bid
+from .models import User, Listing, Category, Bid, Watch
 
+def get_cur_price(listing):
+    current_bids = Bid.objects.filter(listing=listing).order_by('-price').values()
+
+    if len(current_bids) < 1:
+        return listing.starting_bid
+    else:
+        return current_bids.first()["price"]
 
 def index(request):
     # Take all not ended (active) listings
@@ -14,14 +22,15 @@ def index(request):
     # Take current price for every listing item
     current_prices = []
     for listing in current_listings:
-        # If no bid -> current_price = starting_bid
-        # Else -> current_price = max_bid(price of bids)
-        current_bids = Bid.objects.filter(listing=listing).order_by('-price').values()
+        current_prices.append(get_cur_price(listing))
+        # # If no bid -> current_price = starting_bid
+        # # Else -> current_price = max_bid(price of bids)
+        # current_bids = Bid.objects.filter(listing=listing).order_by('-price').values()
 
-        if len(current_bids) < 1:
-            current_prices.append(listing.starting_bid)
-        else:
-            current_prices.append(current_bids.first().price())
+        # if len(current_bids) < 1:
+        #     current_prices.append(listing.starting_bid)
+        # else:
+        #     current_prices.append(current_bids.first().price())
     return render(request, "auctions/index.html", {
         "listings": zip(current_listings, current_prices)
     })
@@ -117,26 +126,90 @@ def new_listing(request):
         })
 
 def listing(request):
-    if request.method == "POST":
-        ...
-    else:
-        try:
-            # Get list id
-            listing_id = int(request.GET.get("l"))
-            
-            # Find list
-            listings = Listing.objects.filter(id=listing_id)
+    try:
+        # Get list id
+        listing_id = int(request.GET.get("l"))
+        
+        # Find list
+        listings = Listing.objects.filter(id=listing_id).annotate(total_bids=Count('bid'))
 
-            if len(listings) != 1:
-                raise ValueError("No list with given id!")
-            
-            my_listing = listings.first()
+        if len(listings) != 1:
+            raise ValueError("No list with given id!")
+        
+        my_listing = listings.first()
 
-        except Exception as e:
-            return render(request, "auctions/listing.html", {
-                "listing": listing,
-                "message": f"Error while finding list. {e}"
-            })
+        if request.method == "POST":
+            # Take price for new bid
+            price = float(request.POST.get('bid-amount'))
+            
+            # Check price
+            if price <= get_cur_price(my_listing):
+                raise ValueError("Your bid must greater than current price")
+            
+            # Create new bid
+            new_bid = Bid(listing=my_listing, user=request.user, price=price)
+            new_bid.save()
+
+            return HttpResponseRedirect(f"listing?l={listing_id}")
+        
+        # Check added watchlist or not
+        watch_entry_count = Watch.objects.filter(listing=my_listing, user=request.user).count()
+
+        in_the_list = False
+
+        if watch_entry_count > 0:
+            in_the_list = True
+
+        # Check current user favorite or not
+        you_are_favorite = False
+
+        current_bids = Bid.objects.filter(listing=my_listing, user=request.user).order_by('-price').values()
+
+        if current_bids.count() > 0 and current_bids.first()["price"] == get_cur_price(my_listing):
+            you_are_favorite = True
+
+
+
+    except Exception as e:
+        return render(request, "auctions/listing.html", {
+            "listing": my_listing,
+            "cur_price": get_cur_price(my_listing),
+            "in_the_list": in_the_list,
+             "you_are_favorite": you_are_favorite,
+            "message": f"Error while finding list. {e}"
+        })
     return render(request, "auctions/listing.html", {
-        "listing": my_listing
+        "listing": my_listing,
+        "cur_price": get_cur_price(my_listing),
+        "in_the_list": in_the_list,
+        "you_are_favorite": you_are_favorite
     })
+
+def add_to_watchlist(request):
+    try:
+        # Get list_id from querystring
+        listing_id = int(request.GET.get("l"))
+
+        # Find list
+        listings = Listing.objects.filter(id=listing_id).annotate(total_bids=Count('bid'))
+
+        if len(listings) != 1:
+            raise ValueError("No list with given id!")
+        
+        my_listing = listings.first()
+
+        # Check user has watchlist entry for this listing or has not
+        watch_entries_count = Watch.objects.filter(user=request.user, listing=my_listing).count()
+
+        if watch_entries_count > 0:
+            raise ValueError("Already added to watchlist")
+
+        # Create watchlist entry
+        new_watch = Watch(listing=my_listing, user=request.user)
+        new_watch.save()
+
+        # Redirect to listing
+        return HttpResponseRedirect(f"listing?l={listing_id}")
+    except Exception as e:
+        return HttpResponseRedirect("./")
+    ...

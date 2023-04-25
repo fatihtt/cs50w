@@ -5,4 +5,41 @@
         <div class="div-message">{{ message }}</div>
     {% endif %}
     <h2>Listing - {{ listing.title }}</h2>
+    <div class="div-image">
+        {% if in_the_list %}WatchList{% endif %}
+        <img src="{{ listing.image_url }}" alt="">
+    </div>
+    <div class="div-description">
+        {{ listing.description }}
+    </div>
+    {% if not in_the_list %}
+    <div class="div-add-to-watchlist">
+        <a class="nav-link" href="add-to-watchlist?l={{ listing.id }}">+Add To Watchlist</a>
+    </div>
+    {% endif %}
+    <div class="div-price">
+        <h4>${{ cur_price }}</h4>
+    </div>
+    <div class="div-bid-description">
+        {{ listing.total_bids }} bid(s) so far.
+        {% if you_are_favorite %} Your bid is the current bid. {% endif %}
+    </div>
+    <div class="div-bid-place">
+        <form method="post">
+            {% csrf_token %}
+            <input type="text" name="bid-amount" id="bid-amount">
+            <input type="submit" value="Place Bid">
+        </form>
+    </div>
+    <h4>Details:</h4>
+    <div class="div-details">
+        <ul>
+            <li>
+                Listed by: {{ listing.user.username }}
+            </li>
+            <li>
+                Category: {{ listing.category.name }}
+            </li>
+        </ul>
+    </div>
 {% endblock %}
