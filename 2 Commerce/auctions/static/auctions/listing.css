@@ -11,3 +11,10 @@
 .div-comment-text {
     font-style: italic;
 }
+h4 {
+    margin-top: 30px;
+}
+.div-bid-winner {
+    color: green;
+    font-size: larger;
+}

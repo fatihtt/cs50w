@@ -5,7 +5,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.db.models import Count
 
-from .models import User, Listing, Category, Bid, Watch, Comment
+from .models import User, Listing, Category, Bid, Watch, Comment, WinnerBid
 
 def get_cur_price(listing):
     current_bids = Bid.objects.filter(listing=listing).order_by('-price').values()
@@ -153,25 +153,31 @@ def listing(request):
             return HttpResponseRedirect(f"listing?l={listing_id}")
         
         # Check added watchlist or not
-        watch_entry_count = Watch.objects.filter(listing=my_listing, user=request.user).count()
-
         in_the_list = False
 
-        if watch_entry_count > 0:
-            in_the_list = True
+        if request.user.is_authenticated:
+            watch_entry_count = Watch.objects.filter(listing=my_listing, user=request.user).count()
+
+            if watch_entry_count > 0:
+                in_the_list = True
 
         # Check current user favorite or not
         you_are_favorite = False
 
-        current_bids = Bid.objects.filter(listing=my_listing, user=request.user).order_by('-price').values()
+        if request.user.is_authenticated:
+            current_bids = Bid.objects.filter(listing=my_listing, user=request.user).order_by('-price').values()
 
-        if current_bids.count() > 0 and current_bids.first()["price"] == get_cur_price(my_listing):
-            you_are_favorite = True
+            if current_bids.count() > 0 and current_bids.first()["price"] == get_cur_price(my_listing):
+                you_are_favorite = True
 
         # Take comments
         comments = Comment.objects.filter(listing=my_listing).order_by('-time')
-        for comment in comments:
-            print("user of comment:", comment.user.username)
+
+        # Check wether this user can close or not
+        can_close = False
+
+        if request.user.is_authenticated and my_listing.user == request.user:
+            can_close = True
 
     except Exception as e:
         return render(request, "auctions/listing.html", {
@@ -180,6 +186,7 @@ def listing(request):
             "in_the_list": in_the_list,
             "you_are_favorite": you_are_favorite,
             "comments": comments,
+            "can_close": can_close,
             "message": f"Error while finding list. {e}"
         })
     return render(request, "auctions/listing.html", {
@@ -188,6 +195,7 @@ def listing(request):
         "in_the_list": in_the_list,
         "you_are_favorite": you_are_favorite,
         "comments": comments,
+        "can_close": can_close
     })
 
 def add_to_watchlist(request):
@@ -243,4 +251,39 @@ def add_comment(request):
         return HttpResponseRedirect(f"listing?l={listing_id}")
 
     except Exception as e:
+        return HttpResponseRedirect(f"./")
+
+def close_auction(request):
+    try:
+        # Get list_id from querystring
+        listing_id = int(request.GET.get("l"))
+
+        # Find list
+        listings = Listing.objects.filter(id=listing_id).annotate(total_bids=Count('bid'))
+
+        if len(listings) != 1:
+            raise ValueError("No list with given id!")
+        
+        my_listing = listings.first()
+
+        # Check wether can close or not
+        if my_listing.user == request.user:
+            # Find winner bid
+            bids = Bid.objects.filter(listing=my_listing).order_by("-price")
+
+            if bids.count() > 0:
+                # Save winner bid
+                winner = WinnerBid(listing=my_listing, bid=bids.first())
+                winner.save()
+
+            # Close auction
+            my_listing.ended = True
+            my_listing.save()
+            # Redirect to listing
+            return HttpResponseRedirect(f"listing?l={listing_id}")
+        else:
+            raise ValueError("This user can not close this auction")
+
+        return HttpResponseRedirect(f"listing?l={listing_id}")
+    except:
         return HttpResponseRedirect(f"./")

@@ -11,13 +11,14 @@
     {% endif %}
     <h2>Listing - {{ listing.title }}</h2>
     <div class="div-image">
+        {{ user.is_authenticated }}
         {% if in_the_list %}WatchList{% endif %}
         <img src="{{ listing.image_url }}" alt="">
     </div>
     <div class="div-description">
         {{ listing.description }}
     </div>
-    {% if not in_the_list %}
+    {% if not in_the_list and not listing.ended %}
     <div class="div-add-to-watchlist">
         <a class="nav-link" href="add-to-watchlist?l={{ listing.id }}">+Add To Watchlist</a>
     </div>
@@ -25,47 +26,66 @@
     <div class="div-price">
         <h4>${{ cur_price }}</h4>
     </div>
-    <div class="div-bid-description">
-        {{ listing.total_bids }} bid(s) so far.
-        {% if you_are_favorite %} Your bid is the current bid. {% endif %}
-    </div>
-    <div class="div-bid-place">
-        <form method="post">
-            {% csrf_token %}
-            <input type="text" name="bid-amount" id="bid-amount">
-            <input type="submit" value="Place Bid">
-        </form>
-    </div>
-    <h4>Details:</h4>
-    <div class="div-details">
-        <ul>
-            <li>
-                Listed by: {{ listing.user.username }}
-            </li>
-            <li>
-                Category: {{ listing.category.name }}
-            </li>
-        </ul>
-    </div>
+    {% if listing.ended and you_are_favorite %}
+        <div class="div-bid-winner">
+            Conguratulation, you won the auction!
+        </div>
+    {% elif listing.ended %}
+        <div>Auction closed!</div>
+    {% endif %}
+    {% if not listing.ended %}
+        <div class="div-bid-description">
+            {{ listing.total_bids }} bid(s) so far.
+            {% if you_are_favorite %} Your bid is the current bid. {% endif %}
+        </div>
+        <div class="div-bid-place">
+            <form method="post">
+                {% csrf_token %}
+                <input type="text" name="bid-amount" id="bid-amount">
+                <input type="submit" value="Place Bid">
+            </form>
+        </div>
+        <h4>Details:</h4>
+        <div class="div-details">
+            <ul>
+                <li>
+                    Listed by: {{ listing.user.username }}
+                </li>
+                <li>
+                    Category: {{ listing.category.name }}
+                </li>
+            </ul>
+        </div>
+        {% if can_close %}
+        <h4>Close Auction</h4>
+        <div class="div-close-auction">
+            <form method="post" action="close-auction?l={{ listing.id }}">
+                {% csrf_token %}
+                <input type="submit" value="Close Auction">
+            </form>
+        </div>
+        {% endif %}
+    {% endif %}
     <div class="div-comments">
         <h4>Comments:</h4>
+        {% if not listing.ended %}
         <form action="add-comment?l={{ listing.id }}" method="post">
             {% csrf_token %}
             <textarea name="comment_text" id="comment_text" cols="50" rows="5"></textarea>
             <input type="submit" value="Add New Comment">
         </form>
+        {% endif %}
         {% for comment in comments %}
-            <div class="div-comment">
-                <div class="div-comment-header">
-                        {{ comment.user.username }} wrote in {{ comment.time }}:
-                </div>
-                <div class="div-comment-text">
-                    "{{ comment.message }}"
-                </div>
+        <div class="div-comment">
+            <div class="div-comment-header">
+                    {{ comment.user.username }} wrote in {{ comment.time }}:
             </div>
-        {% empty %}
-            <div>No comment yet</div>
-        {% endfor %}
+            <div class="div-comment-text">
+                "{{ comment.message }}"
+            </div>
         </div>
+        {% empty %}
+        <div>No comment yet</div>
+        {% endfor %}
     </div>
 {% endblock %}
