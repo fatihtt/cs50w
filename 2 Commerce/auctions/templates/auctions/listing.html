@@ -1,4 +1,9 @@
 {% extends "auctions/layout.html" %}
+{% load static %}
+
+{% block head %}
+    <link href="{% static 'auctions/listing.css' %}" rel="stylesheet">
+{% endblock %}
 
 {% block body %}
     {% if message %}
@@ -41,5 +46,26 @@
                 Category: {{ listing.category.name }}
             </li>
         </ul>
+    </div>
+    <div class="div-comments">
+        <h4>Comments:</h4>
+        <form action="add-comment?l={{ listing.id }}" method="post">
+            {% csrf_token %}
+            <textarea name="comment_text" id="comment_text" cols="50" rows="5"></textarea>
+            <input type="submit" value="Add New Comment">
+        </form>
+        {% for comment in comments %}
+            <div class="div-comment">
+                <div class="div-comment-header">
+                        {{ comment.user.username }} wrote in {{ comment.time }}:
+                </div>
+                <div class="div-comment-text">
+                    "{{ comment.message }}"
+                </div>
+            </div>
+        {% empty %}
+            <div>No comment yet</div>
+        {% endfor %}
+        </div>
     </div>
 {% endblock %}

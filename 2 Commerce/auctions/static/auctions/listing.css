@@ -1,0 +1,13 @@
+.div-comments > form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 500px;
+    margin-bottom: 30px;
+}
+.div-comment-header {
+    border-bottom: 1px solid black;
+}
+.div-comment-text {
+    font-style: italic;
+}

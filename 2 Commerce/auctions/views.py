@@ -5,7 +5,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.db.models import Count
 
-from .models import User, Listing, Category, Bid, Watch
+from .models import User, Listing, Category, Bid, Watch, Comment
 
 def get_cur_price(listing):
     current_bids = Bid.objects.filter(listing=listing).order_by('-price').values()
@@ -168,21 +168,26 @@ def listing(request):
         if current_bids.count() > 0 and current_bids.first()["price"] == get_cur_price(my_listing):
             you_are_favorite = True
 
-
+        # Take comments
+        comments = Comment.objects.filter(listing=my_listing).order_by('-time')
+        for comment in comments:
+            print("user of comment:", comment.user.username)
 
     except Exception as e:
         return render(request, "auctions/listing.html", {
             "listing": my_listing,
             "cur_price": get_cur_price(my_listing),
             "in_the_list": in_the_list,
-             "you_are_favorite": you_are_favorite,
+            "you_are_favorite": you_are_favorite,
+            "comments": comments,
             "message": f"Error while finding list. {e}"
         })
     return render(request, "auctions/listing.html", {
         "listing": my_listing,
         "cur_price": get_cur_price(my_listing),
         "in_the_list": in_the_list,
-        "you_are_favorite": you_are_favorite
+        "you_are_favorite": you_are_favorite,
+        "comments": comments,
     })
 
 def add_to_watchlist(request):
@@ -212,4 +217,30 @@ def add_to_watchlist(request):
         return HttpResponseRedirect(f"listing?l={listing_id}")
     except Exception as e:
         return HttpResponseRedirect("./")
-    ...
+    
+def add_comment(request):
+    try:
+        # Get list_id from querystring
+        listing_id = int(request.GET.get("l"))
+
+        # Find list
+        listings = Listing.objects.filter(id=listing_id).annotate(total_bids=Count('bid'))
+
+        if len(listings) != 1:
+            raise ValueError("No list with given id!")
+        
+        my_listing = listings.first()
+
+        # Get comment text from POST
+        comment_text = request.POST.get('comment_text')
+        if len(comment_text) < 1:
+            raise ValueError("no comment text")
+        
+        # Save new comment
+        new_comment = Comment(listing=my_listing, user=request.user, message=comment_text)
+        new_comment.save()
+
+        return HttpResponseRedirect(f"listing?l={listing_id}")
+
+    except Exception as e:
+        return HttpResponseRedirect(f"./")
