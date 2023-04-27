@@ -21,7 +21,21 @@
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'index' %}">Active Listings</a>
             </li>
+            <li class="nav-item">
+                <a href="{% url 'categories' %}" class="nav-link">
+                    Categories
+                </a>
+            </li>
             {% if user.is_authenticated %}
+                <li class="nav-item">
+                    <a href="{% url 'watchlist' %}" class="nav-link">
+                        Watchlist 
+                        <span class="badge badge-secondary">{{ watchlist_count }}</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'new-listing' %}">Create Listing</a>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'logout' %}">Log Out</a>
                 </li>

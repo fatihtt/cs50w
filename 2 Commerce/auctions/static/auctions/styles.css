@@ -5,3 +5,7 @@ body {
     color: rebeccapurple;
     margin: 20px 14px;
 }
+
+.font-super {
+    vertical-align: super;
+}

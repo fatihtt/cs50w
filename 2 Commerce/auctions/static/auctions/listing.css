@@ -18,3 +18,14 @@ h4 {
     color: green;
     font-size: larger;
 }
+.a-watch-list {
+    background-color: gray;
+    color: white;
+    cursor: pointer;
+    text-decoration: none;
+    padding: 3px 10px;
+    border-radius: 5px;
+}
+.a-watch-list:hover {
+    color: white;
+}

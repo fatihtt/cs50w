@@ -4,8 +4,10 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django.db.models import Count
+from django.template.response import TemplateResponse
 
 from .models import User, Listing, Category, Bid, Watch, Comment, WinnerBid
+
 
 def get_cur_price(listing):
     current_bids = Bid.objects.filter(listing=listing).order_by('-price').values()
@@ -14,6 +16,12 @@ def get_cur_price(listing):
         return listing.starting_bid
     else:
         return current_bids.first()["price"]
+    
+def watchlist_count(request):
+    watchlist_count = -1
+    if request.user.is_authenticated:
+        watchlist_count = Watch.objects.filter(user=request.user).count()
+    return watchlist_count
 
 def index(request):
     # Take all not ended (active) listings
@@ -32,7 +40,8 @@ def index(request):
         # else:
         #     current_prices.append(current_bids.first().price())
     return render(request, "auctions/index.html", {
-        "listings": zip(current_listings, current_prices)
+        "listings": zip(current_listings, current_prices),
+        "watchlist_count": watchlist_count(request)
     })
 
 
@@ -118,11 +127,13 @@ def new_listing(request):
         except Exception as e:
             return render(request, "auctions/new-listing.html", {
                 "categories": categories,
+                "watchlist_count": watchlist_count(request),
                 "message": f"Error while creating new listing. {e}"
             })
     else:
         return render(request, "auctions/new-listing.html", {
-            "categories": categories
+            "categories": categories,
+            "watchlist_count": watchlist_count(request)
         })
 
 def listing(request):
@@ -137,20 +148,6 @@ def listing(request):
             raise ValueError("No list with given id!")
         
         my_listing = listings.first()
-
-        if request.method == "POST":
-            # Take price for new bid
-            price = float(request.POST.get('bid-amount'))
-            
-            # Check price
-            if price <= get_cur_price(my_listing):
-                raise ValueError("Your bid must greater than current price")
-            
-            # Create new bid
-            new_bid = Bid(listing=my_listing, user=request.user, price=price)
-            new_bid.save()
-
-            return HttpResponseRedirect(f"listing?l={listing_id}")
         
         # Check added watchlist or not
         in_the_list = False
@@ -179,6 +176,20 @@ def listing(request):
         if request.user.is_authenticated and my_listing.user == request.user:
             can_close = True
 
+        if request.method == "POST":
+            # Take price for new bid
+            price = float(request.POST.get('bid-amount'))
+            
+            # Check price
+            if price <= get_cur_price(my_listing):
+                raise ValueError("Your bid must greater than current price")
+            
+            # Create new bid
+            new_bid = Bid(listing=my_listing, user=request.user, price=price)
+            new_bid.save()
+
+            return HttpResponseRedirect(f"listing?l={listing_id}")
+
     except Exception as e:
         return render(request, "auctions/listing.html", {
             "listing": my_listing,
@@ -187,6 +198,7 @@ def listing(request):
             "you_are_favorite": you_are_favorite,
             "comments": comments,
             "can_close": can_close,
+            "watchlist_count": watchlist_count(request),
             "message": f"Error while finding list. {e}"
         })
     return render(request, "auctions/listing.html", {
@@ -195,7 +207,8 @@ def listing(request):
         "in_the_list": in_the_list,
         "you_are_favorite": you_are_favorite,
         "comments": comments,
-        "can_close": can_close
+        "can_close": can_close,
+        "watchlist_count": watchlist_count(request)
     })
 
 def add_to_watchlist(request):
@@ -212,14 +225,15 @@ def add_to_watchlist(request):
         my_listing = listings.first()
 
         # Check user has watchlist entry for this listing or has not
-        watch_entries_count = Watch.objects.filter(user=request.user, listing=my_listing).count()
+        watch_entries = Watch.objects.filter(user=request.user, listing=my_listing)
 
-        if watch_entries_count > 0:
-            raise ValueError("Already added to watchlist")
-
-        # Create watchlist entry
-        new_watch = Watch(listing=my_listing, user=request.user)
-        new_watch.save()
+        if watch_entries.count() > 0:
+            for watch_entry in watch_entries:
+                watch_entry.delete()
+        else:
+            # Create watchlist entry
+            new_watch = Watch(listing=my_listing, user=request.user)
+            new_watch.save()
 
         # Redirect to listing
         return HttpResponseRedirect(f"listing?l={listing_id}")
@@ -283,7 +297,59 @@ def close_auction(request):
             return HttpResponseRedirect(f"listing?l={listing_id}")
         else:
             raise ValueError("This user can not close this auction")
-
-        return HttpResponseRedirect(f"listing?l={listing_id}")
     except:
         return HttpResponseRedirect(f"./")
+
+def watchlist(request):
+    try:
+        # Take user's watchlist listings
+        watches = Watch.objects.filter(user=request.user)
+
+        listings = []
+        prices = []
+
+        for watch in watches:
+            listings.append(watch.listing)
+            prices.append(get_cur_price(watch.listing))
+
+        return render(request, "auctions/watchlist.html", {
+            "listings": listings,
+            "watchlist_count": watchlist_count(request)
+        })
+    except Exception as e:
+        return render(request, "auctions/watchlist.html", {
+            "listings": zip(listings, prices),
+            "watchlist_count": watchlist_count(request),
+        })
+
+def categories(request):
+    # take categories with count of listings
+    all_categories = Category.objects.all().annotate(listings_count=Count('listing'))
+    return render(request, "auctions/categories.html", {
+        "categories": all_categories,
+        "watchlist_count": watchlist_count(request),
+    })
+
+def category(request):
+    try:
+        # get category id
+        category_id = request.GET.get("c")
+        # get category
+        categories = Category.objects.filter(id=category_id)
+        if categories.count() != 1:
+            raise ValueError("No category with this id")
+        
+        category = categories.first()
+        listings = Listing.objects.filter(category=category, ended=False)
+        prices = []
+        for listing in listings:
+            prices.append(get_cur_price(listing))
+        return render(request, "auctions/category.html", {
+            "watchlist_count": watchlist_count(request),
+            "cur_category": category,
+            "listings": zip(listings, prices)
+        })
+    except Exception as e:
+        print(e)
+        return HttpResponseRedirect("categories")
+

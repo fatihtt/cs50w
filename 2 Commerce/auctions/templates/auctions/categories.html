@@ -1,0 +1,18 @@
+{% extends "auctions/layout.html" %}
+{% load static %}
+
+{% block head %}
+{% endblock %}
+
+{% block body %}
+    <h2>Categories</h2>
+
+    {% for category in categories %}
+        <div class="div-category">
+            <a href="category?c={{ category.id }}" class="nav-link">
+                {{ category.name }}
+                <span class="badge badge-secondary font-super">{{category.listings_count}}</span>
+            </a>
+        </div>
+    {% endfor %}
+{% endblock %}

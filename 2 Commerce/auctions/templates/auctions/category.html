@@ -1,0 +1,23 @@
+{% extends "auctions/layout.html" %}
+{% load static %}
+
+{% block head %}
+<script src="{% static 'auctions/index.js' %}"></script>
+{% endblock %}
+
+{% block body %}
+    <h2>Category: {{ cur_category.name }}</h2>
+
+    {% for listing, price in listings %}
+        <div class="div-listings-main">
+            <div data-id="{{ listing.id }}" class="div-listing-item">
+                <h4>{{ listing.title }}</h4>
+                <img src="{{ listing.image_url }}" alt="listing image">
+                <p>${{ price }}</p>
+            </div>
+        </div>
+    {% empty %}
+        No active listing in {{ cur_category.name }}
+    {% endfor %}
+    
+{% endblock %}
