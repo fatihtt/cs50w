@@ -17,24 +17,20 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function send_mail(e) {
-  // Take inputs
-  // Check inputs
-  // If no err  -> send data to API
-  // Else       -> show err
-  // If no err  -> show send box
-  // Else       -> show err
   try {
+    // Take inputs
     const i_subject = document.querySelector("#compose-subject").value;
     const i_recipients = document.querySelector("#compose-recipients").value;
     const i_body = document.querySelector("#compose-body").value;
 
+    // Check inputs
     // if any needed infos blank -> throw error
     if (i_subject.length < 1 || i_recipients.length < 1 || i_body.length < 1) {
       throw "Error. Missing information!";
     }
 
     const ii_recipients = i_recipients.split(",");
-    
+    // If no err  -> send data to API
     // Send to API
     fetch('/emails', {
       method: 'POST',
@@ -62,8 +58,8 @@ function send_mail(e) {
       alert(error);
     });
   } catch (err) {
-
-    console.log("Error", err);
+    alert(err);
+    console.log(err);
   }
 }
 
@@ -87,4 +83,35 @@ function load_mailbox(mailbox) {
 
   // Show the mailbox name
   document.querySelector('#emails-view').innerHTML = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
+
+  // Get emails by mailbox
+
+  fetch(`/emails/${mailbox}`).then(response => response.json()).then(emails => {
+    
+    // Mailbox header
+    htmlMails = `<h3>${mailbox.charAt(0).toUpperCase() + mailbox.slice(1)}</h3>`;
+
+    // If no email in mailbox, inform user
+    if(emails.length < 1) {
+      htmlMails += `No email in ${mailbox} yet.`;
+    }
+
+    // Email listing
+    for (let i = 0; i < emails.length; i++) {
+      let email = emails[i]
+      htmlMails += `
+        <div class="div-email-main${email.read ? ' read' : ''}">
+          <div>${email.subject}</div>
+          <div>${email.recipients[0]}</div>
+          <div>${email.timestamp}</div>
+        </div>
+      `;
+    }
+
+    // Insert html to view
+    document.querySelector("#emails-view").innerHTML = htmlMails;
+
+  }).catch(err => {
+    console.log(`Error while fetching: ${err}`);
+  });
 }
