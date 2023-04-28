@@ -6,9 +6,59 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelector('#archived').addEventListener('click', () => load_mailbox('archive'));
   document.querySelector('#compose').addEventListener('click', compose_email);
 
+  // Other event listeners
+  document.querySelector("#send-mail").addEventListener('click', function(event){
+    send_mail(event);
+    event.preventDefault();
+  });
+
   // By default, load the inbox
   load_mailbox('inbox');
 });
+
+function send_mail(e) {
+  // Take inputs
+  // Check inputs
+  // If no err  -> send data to API
+  // Else       -> show err
+  // If no err  -> show send box
+  // Else       -> show err
+  try {
+    const i_subject = document.querySelector("#compose-subject").value;
+    const i_recipients = document.querySelector("#compose-recipients").value;
+    const i_body = document.querySelector("#compose-body").value;
+
+    // if any needed infos blank -> throw error
+    if (i_subject.length < 1 || i_recipients.length < 1 || i_body.length < 1) {
+      throw "Error. Missing information!";
+    }
+
+    const ii_recipients = i_recipients.split(",");
+    
+    fetch('/emails', {
+      method: 'POST',
+      body: JSON.stringify({
+          recipients: i_recipients,
+          subject: i_subject,
+          body: i_body
+      })
+    })
+    .then(response => response.json())
+    .then(result => {
+        // Print result
+        console.log("result", result);
+        if (result.error) throw result.error;
+        if (result.message && result.message === "Email sent successfully.") {
+          load_mailbox('sent')
+        }
+    }).catch(error => {
+      console.log("Error in Promise: ", error);
+      alert(error);
+    });
+  } catch (err) {
+    console.log("Error", err);
+  }
+}
 
 function compose_email() {
 
