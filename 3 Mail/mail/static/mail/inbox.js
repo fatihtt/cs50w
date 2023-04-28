@@ -35,6 +35,7 @@ function send_mail(e) {
 
     const ii_recipients = i_recipients.split(",");
     
+    // Send to API
     fetch('/emails', {
       method: 'POST',
       body: JSON.stringify({
@@ -45,7 +46,7 @@ function send_mail(e) {
     })
     .then(response => response.json())
     .then(result => {
-        // Print result
+        // Result
 
         // If error -> alert
         if (result.error) throw result.error;
@@ -54,11 +55,14 @@ function send_mail(e) {
         if (result.message && result.message === "Email sent successfully.") {
           load_mailbox('sent')
         }
+
     }).catch(error => {
+
       console.log("Error in Promise: ", error);
       alert(error);
     });
   } catch (err) {
+
     console.log("Error", err);
   }
 }
