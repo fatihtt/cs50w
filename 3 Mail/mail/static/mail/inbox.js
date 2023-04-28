@@ -46,8 +46,11 @@ function send_mail(e) {
     .then(response => response.json())
     .then(result => {
         // Print result
-        console.log("result", result);
+
+        // If error -> alert
         if (result.error) throw result.error;
+
+        // If successful message received, go to sent box
         if (result.message && result.message === "Email sent successfully.") {
           load_mailbox('sent')
         }
