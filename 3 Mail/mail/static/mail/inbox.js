@@ -98,7 +98,7 @@ function load_mail(mail_id) {
   try {
     fetch(`/emails/${mail_id}`).then(response => response.json()).then(email => {
     // Print email
-    console.log(email);
+    //console.log(email);
     
     let recipientsHtml = "";
     for (let i = 0; i < email.recipients.length; i++) {
