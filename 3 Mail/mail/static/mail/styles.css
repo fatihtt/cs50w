@@ -15,3 +15,19 @@ textarea {
 .div-email-main > div {
     flex: 1
 }
+#email-view {
+    display: flex;
+    flex-direction: column;
+}
+#email-view-in > div {
+    display: flex;
+    gap:10px;
+    justify-content: flex-start;
+    line-height: 200%;
+}
+#email-view-in > div div:nth-child(1) {
+    flex:1;
+}
+#email-view-in > div div:nth-child(2) {
+    flex:10;
+}
