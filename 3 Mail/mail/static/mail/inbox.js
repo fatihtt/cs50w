@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.querySelector('#inbox').addEventListener('click', () => load_mailbox('inbox'));
   document.querySelector('#sent').addEventListener('click', () => load_mailbox('sent'));
   document.querySelector('#archived').addEventListener('click', () => load_mailbox('archive'));
-  document.querySelector('#compose').addEventListener('click', compose_email);
+  document.querySelector('#compose').addEventListener('click', () => compose_email(false));
 
   // Other event listeners
   document.querySelector("#send-mail").addEventListener('click', function(event){
@@ -63,8 +63,7 @@ function send_mail(e) {
   }
 }
 
-function compose_email(isReply, subject, recipient) {
-
+function compose_email(isReply, subject, recipient, m_body, timestamp) {
   // Show compose view and hide other views
   document.querySelector('#emails-view').style.display = 'none';
   document.querySelector('#compose-view').style.display = 'block';
@@ -74,13 +73,17 @@ function compose_email(isReply, subject, recipient) {
   document.querySelector('#compose-recipients').value = '';
   document.querySelector('#compose-subject').value = '';
   document.querySelector('#compose-body').value = '';
+  document.querySelector('#compose-recipients').readOnly = false;
 
+  // Pre-define composition fields for replying
   if (isReply) {
     const recipientInput = document.querySelector('#compose-recipients');
+    const bodyInput = document.querySelector('#compose-body');
     recipientInput.value = recipient;
     recipientInput.readOnly = true;
     document.querySelector('#compose-subject').value = `Reply to: "${subject}"`;
-    document.querySelector('#compose-body').focus();
+    bodyInput.value = `On ${timestamp}, ${recipient} wrote: "${m_body}"\n\n`;
+    bodyInput.focus();
   }
 }
 
@@ -149,7 +152,7 @@ function load_mail(mail_id) {
 
       // Reply button eventListener
       document.querySelector("#button-reply").addEventListener("click", function (event) {
-        compose_email(true, email.subject , email.sender);
+        compose_email(true, email.subject , email.sender, email.body, email.timestamp);
         event.preventDefault();
       });
     }
