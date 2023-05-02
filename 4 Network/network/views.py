@@ -8,7 +8,7 @@ from .models import User, Post
 
 
 def index(request):
-    # Get querystring to determine wanted all post or fallowing
+    # Get querystring to determine requested all post or fallowing
     try:
         m_querystring = request.GET.get("p")
         posts = Post.objects.all().order_by("-time")
