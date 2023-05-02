@@ -1,5 +1,33 @@
 {% extends "network/layout.html" %}
+{% load static %}
+
+{% block head %}
+<script src="{% static 'network/index.js' %}"></script>
+{% endblock %}
 
 {% block body %}
-    TODO
+    <div class="div-posts">
+        {% if user.is_authenticated and not request.GET.p == "f" %}
+            <form class="form-newpost" action="./" method="post">
+                <h3>New Post:</h3>
+                <input placeholder="Title" type="text" id="input-newpost-title">
+                <textarea name="" id="input-newpost-text" cols="30" rows="10"></textarea>
+                <button id="input-newpost-submit">Save</button>
+            </form>
+        {% endif %}
+        {% for post in posts %}
+            <div class="div-post">
+                <h4>{{ post.title }}</h4>
+                {% if user.username == post.user.username %}
+                    <a href="#">Edit</a>
+                {% endif %}
+                <p>
+                    {{ post.text }}
+                </p>
+                <p class="css-description">{{ post.user.username }}; {{ post.time }}</p>
+            </div>
+        {% empty %}
+            No post yet!
+        {% endfor %}
+    </div>
 {% endblock %}
