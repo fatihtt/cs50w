@@ -4,11 +4,37 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from .models import User
+from .models import User, Post
 
 
 def index(request):
-    return render(request, "network/index.html")
+    # Get querystring to determine wanted all post or fallowing
+    try:
+        m_querystring = request.GET.get("p")
+        posts = Post.objects.all().order_by("-time")
+
+        if m_querystring and m_querystring == "f":
+            my_fallowings = request.user.fallower.all()
+
+            # Scan posts and if not in fallowing list of current user, exclude post
+            for post in posts:
+                fallowing_detect = False
+
+                for fallowing in my_fallowings:
+                    print("if state:", fallowing.user, post.user)
+                    if fallowing.user == post.user:
+                        fallowing_detect = True
+                        
+                if not fallowing_detect:
+                    posts = posts.exclude(id = post.id)
+                    
+
+        return render(request, "network/index.html", {
+            "posts": posts
+        })
+    except Exception as e:
+        print("Error, ", e)
+        return render(request, "network/index.html")
 
 
 def login_view(request):

@@ -24,6 +24,7 @@ class PostLike(models.Model):
     time = models.DateTimeField(auto_now_add=True)
 
 class Fallowing(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="fallowing_user")
-    fallower = models.ForeignKey(User, on_delete=models.CASCADE, related_name="fallower_user")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="fallowing")
+    fallower = models.ForeignKey(User, on_delete=models.CASCADE, related_name="fallower")
     time = models.DateTimeField(auto_now_add=True)
+    
