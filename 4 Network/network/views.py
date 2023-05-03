@@ -1,8 +1,12 @@
+import json
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
 
 from .models import User, Post
 
@@ -87,3 +91,37 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "network/register.html")
+
+@login_required
+@csrf_exempt
+def new_post(request):
+    try:
+        # Check user authenticated
+        if not request.user.is_authenticated:
+            raise Exception("User not authenticated")
+
+        # Check request method
+        if request.method != "POST":
+            raise Exception("Method should be post!")
+        
+        # Get data
+        data = json.loads(request.body)
+        title = data.get("title", "")
+        text = data.get("text", "")
+
+        # Check data
+        if len(title) < 1 or len(text) < 1:
+            raise Exception("Title or text blank")
+        
+        post = Post(
+            user=request.user,
+            title=title,
+            text=text
+        )
+        post.save()
+
+        return JsonResponse({"message": "Post saved."}, status=201)
+    except Exception as e:
+        print(e)
+        return JsonResponse({"error": e}, status=400)
+

@@ -10,8 +10,8 @@
         {% if user.is_authenticated and not request.GET.p == "f" %}
             <form class="form-newpost" action="./" method="post">
                 <h3>New Post:</h3>
-                <input placeholder="Title" type="text" id="input-newpost-title">
-                <textarea name="" id="input-newpost-text" cols="30" rows="10"></textarea>
+                <input placeholder="Title" type="text" id="input-newpost-title" name="input-newpost-title">
+                <textarea name="" id="input-newpost-text" name="input-newpost-text" cols="30" rows="10"></textarea>
                 <button id="input-newpost-submit">Save</button>
             </form>
         {% endif %}
