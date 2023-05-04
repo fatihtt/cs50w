@@ -28,7 +28,6 @@ function toggle_like (e) {
         if (!postId || postId < 1) throw "Missing or wrong postId";
 
         // Make query for db update
-        console.log("postId: ", postId);
         fetch(`/favorite-toggle-post/${postId}`, {
             method: 'PUT',
             body: JSON.stringify({
