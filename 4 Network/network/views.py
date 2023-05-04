@@ -166,22 +166,25 @@ def favorite_toggle(request, post_id):
     
     try:
         if request.method == "PUT":
+
+            # Get json data
+
             data = json.loads(request.body)
             if data.get("favorite") is not None:
                 
-                print("data[favorite]:", data["favorite"])
-                print("count: ", PostLike.objects.filter(user=request.user, post=m_post).count())
+                # If action favorite, create a new PostLike
                 if data["favorite"] == "favorite_border" and PostLike.objects.filter(user=request.user, post=m_post).count() == 0:
                     new_post_like = PostLike(user=request.user, post=m_post)
                     new_post_like.save()
                 
+                # If action unfavorite, Find Postlike and Delete
                 elif data["favorite"] == "favorite" and PostLike.objects.filter(user=request.user, post=m_post).count() > 0:
                     likes = PostLike.objects.filter(user=request.user, post=m_post)
                     likes.all().delete()
 
+                # Response all is well
                 return HttpResponse(status=204)
             else:
-                print("nooone")
                 raise Exception("Favorite none.")
         else:
             raise Exception("No favorite")
