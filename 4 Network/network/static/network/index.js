@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
     // Event listener for new post button
     const newPostButton = document.querySelector("#input-newpost-submit");
-    newPostButton.addEventListener("click", newPost);
+    if (newPostButton) newPostButton.addEventListener("click", newPost);
 
     // eventListener for edit buttons
     const editButtonsList = document.querySelectorAll(".a-post-edit");
@@ -59,7 +59,7 @@ function edit_post_click (e) {
             console.log("response status ", response.status);
             if (response.status === 204) {
                 // Edit ended succesfully
-                
+
                 const postDiv = editDiv.parentElement;
                 postDiv.querySelector(".div-edit-post").classList.add("hidden");
                 postDiv.querySelector(".post-text").innerHTML = editedText;
