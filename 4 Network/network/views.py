@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import User, Post
+from .models import User, Post, PostLike
 
 
 def index(request):
@@ -31,10 +31,18 @@ def index(request):
                         
                 if not fallowing_detect:
                     posts = posts.exclude(id = post.id)
-                    
+        
+        # Create a list for user's likes and zip it to the post list
+        like_list = []
+        for post in posts:
+            if post.likes.filter(user = request.user):
+                like_list.append(True)
+            else:
+                like_list.append(False)
+
 
         return render(request, "network/index.html", {
-            "posts": posts
+            "posts": zip(posts, like_list)
         })
     except Exception as e:
         print("Error, ", e)
@@ -129,7 +137,7 @@ def new_post(request):
 @login_required
 def edit_post(request, post_id):
 
-    # Query for requested email
+    # Query for requested post
     try:
         post = Post.objects.get(user=request.user, pk=post_id)
     except Exception as e:
@@ -145,5 +153,37 @@ def edit_post(request, post_id):
         else:
             raise Exception("No text")
     except Exception as e:
-        return JsonResponse({"error": e}, status=404) 
+        return JsonResponse({"error": e}, status=404)
+    
+@csrf_exempt
+@login_required
+def favorite_toggle(request, post_id):
+    # Query for requested post
+    try:
+        m_post = Post.objects.get(pk=post_id)
+    except Exception as e:
+        return JsonResponse({"error": "Post not found."}, status=404)
+    
+    try:
+        if request.method == "PUT":
+            data = json.loads(request.body)
+            if data.get("favorite") is not None:
+                
+                print("data[favorite]:", data["favorite"])
+                print("count: ", PostLike.objects.filter(user=request.user, post=m_post).count())
+                if data["favorite"] == "favorite_border" and PostLike.objects.filter(user=request.user, post=m_post).count() == 0:
+                    new_post_like = PostLike(user=request.user, post=m_post)
+                    new_post_like.save()
+                
+                elif data["favorite"] == "favorite" and PostLike.objects.filter(user=request.user, post=m_post).count() > 0:
+                    likes = PostLike.objects.filter(user=request.user, post=m_post)
+                    likes.all().delete()
 
+                return HttpResponse(status=204)
+            else:
+                print("nooone")
+                raise Exception("Favorite none.")
+        else:
+            raise Exception("No favorite")
+    except Exception as e:
+        return JsonResponse({"error": e}, status=500)

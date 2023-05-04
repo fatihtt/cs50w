@@ -9,7 +9,56 @@ document.addEventListener("DOMContentLoaded", function () {
         m_button = editButtonsList[i];
         m_button.addEventListener("click", edit_post);
     }
+
+    // eventListener for Like buttons
+    const likeButtonsList = document.querySelectorAll(".favorite");
+    for (let i = 0; i < likeButtonsList.length; i++) {
+        m_button = likeButtonsList[i];
+        m_button.addEventListener("click", toggle_like)
+
+    }
 });
+
+function toggle_like (e) {
+    try {
+        // Get post id
+        postId = e.target.dataset.postid;
+
+        // Check post id
+        if (!postId || postId < 1) throw "Missing or wrong postId";
+
+        // Make query for db update
+        console.log("postId: ", postId);
+        fetch(`/favorite-toggle-post/${postId}`, {
+            method: 'PUT',
+            body: JSON.stringify({
+                favorite: e.target.innerText
+            })
+        }).then(response => {
+            if (response.status === 204) {
+                // Edit ended succesfully
+                e.target.classList.toggle("red");
+
+                // Toggle favorite sign and counter
+                const counterElement = e.target.parentElement.querySelector(".post-like-counter");
+                if (e.target.innerText === "favorite") {
+                    e.target.innerText = "favorite_border";
+                    counterElement.innerText = parseInt(counterElement.innerText) - 1;
+                }
+                else {
+                    e.target.innerText = "favorite";
+                    counterElement.innerText = parseInt(counterElement.innerText) + 1;
+                }
+            }
+            else {
+                throw "error while editing";
+            }
+        }).catch(err => console.log("Server error. ", err));
+
+    } catch (err) {
+        console.log("Js Error: ", err);
+    }
+}
 
 function edit_post (e) {
     try {

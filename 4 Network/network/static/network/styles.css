@@ -23,3 +23,17 @@
 .hidden {
     display: none;
 }
+.p-like {
+    display: flex;
+    align-content: center;
+    gap: 3px;
+}
+.po-pointer {
+    cursor: pointer;
+}
+.po-default {
+    cursor: default;
+}
+.red {
+    color: red;
+}

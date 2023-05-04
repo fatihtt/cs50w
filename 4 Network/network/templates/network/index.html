@@ -2,6 +2,7 @@
 {% load static %}
 
 {% block head %}
+
 <script src="{% static 'network/index.js' %}"></script>
 {% endblock %}
 
@@ -15,7 +16,7 @@
                 <button id="input-newpost-submit">Save</button>
             </form>
         {% endif %}
-        {% for post in posts %}
+        {% for post, like in posts %}
             <div class="div-post">
                 <h4>{{ post.title }}</h4>
                 {% if user.username == post.user.username %}
@@ -25,6 +26,22 @@
                     {{ post.text }}
                 </p>
                 <p class="css-description">{{ post.user.username }}; {{ post.time }}</p>
+                <p class="p-like">
+                    {% if user.username != post.user.username %}
+                        <span data-postid="{{ post.id }}" class="material-icons po-pointer {% if like %}red {% endif %}favorite">
+                            {% if like %}
+                                favorite
+                            {% else %}
+                                favorite_border
+                            {% endif %}
+                        </span>
+                    {% else %}
+                        <span class="material-icons po-default">
+                            favorite_border
+                        </span>
+                    {% endif %}
+                        <span class="post-like-counter">{{ post.likes.count }}</span>
+                </p>
                 {% if user.username == post.user.username %}
                     <div class="div-edit-post hidden">
                         <textarea name="textarea-edit-post{{ post.id }}" id="textarea-edit-post{{ post.id }}" cols="30" rows="10">{{ post.text }}</textarea>

@@ -20,8 +20,8 @@ class Post(models.Model):
         }
 
 class PostLike(models.Model):
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name="likes")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="likers")
     time = models.DateTimeField(auto_now_add=True)
 
 class Fallowing(models.Model):
