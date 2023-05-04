@@ -19,12 +19,18 @@
             <div class="div-post">
                 <h4>{{ post.title }}</h4>
                 {% if user.username == post.user.username %}
-                    <a href="#">Edit</a>
+                    <a data-postid="{{ post.id }}" class="a-post-edit" href="#">Edit</a>
                 {% endif %}
-                <p>
+                <p class="post-text">
                     {{ post.text }}
                 </p>
                 <p class="css-description">{{ post.user.username }}; {{ post.time }}</p>
+                {% if user.username == post.user.username %}
+                    <div class="div-edit-post hidden">
+                        <textarea name="textarea-edit-post{{ post.id }}" id="textarea-edit-post{{ post.id }}" cols="30" rows="10">{{ post.text }}</textarea>
+                        <button data-postid="{{ post.id }}" class="button-edit-post">Save</button>
+                    </div>
+                {% endif %}
             </div>
         {% empty %}
             No post yet!

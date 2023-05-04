@@ -124,4 +124,26 @@ def new_post(request):
     except Exception as e:
         print(e)
         return JsonResponse({"error": e}, status=400)
+    
+@csrf_exempt
+@login_required
+def edit_post(request, post_id):
+
+    # Query for requested email
+    try:
+        post = Post.objects.get(user=request.user, pk=post_id)
+    except Exception as e:
+        return JsonResponse({"error": "Post not found."}, status=404)
+    
+    try:
+        if request.method == "PUT":
+            data = json.loads(request.body)
+            if data.get("text") is not None:
+                post.text = data["text"]
+                post.save()
+                return HttpResponse(status=204)
+        else:
+            raise Exception("No text")
+    except Exception as e:
+        return JsonResponse({"error": e}, status=404) 
 
