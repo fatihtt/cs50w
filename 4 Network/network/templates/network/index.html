@@ -16,9 +16,9 @@
                 <button id="input-newpost-submit">Save</button>
             </form>
         {% endif %}
-        {% for post, like in posts %}
+        {% for post in posts %}
             <div class="div-post">
-                <h4>{{ post.title }}</h4>
+                <h4>{{ post.title }} {{post.i_liked}}</h4>
                 {% if user.username == post.user.username %}
                     <a data-postid="{{ post.id }}" class="a-post-edit" href="#">Edit</a>
                 {% endif %}
@@ -27,9 +27,9 @@
                 </p>
                 <p class="css-description">{{ post.user.username }}; {{ post.time }}</p>
                 <p class="p-like">
-                    {% if user.username != post.user.username %}
-                        <span data-postid="{{ post.id }}" class="material-icons po-pointer {% if like %}red {% endif %}favorite">
-                            {% if like %}
+                    {% if user.is_authenticated and user.username != post.user.username %}
+                        <span data-postid="{{ post.id }}" class="material-icons po-pointer {% if post.i_liked %}red {% endif %}favorite">
+                            {% if post.i_liked %}
                                 favorite
                             {% else %}
                                 favorite_border
@@ -41,6 +41,7 @@
                         </span>
                     {% endif %}
                         <span class="post-like-counter">{{ post.likes.count }}</span>
+                        <span class="post-like-counter">{{ post.likes.user.count }}</span>
                 </p>
                 {% if user.username == post.user.username %}
                     <div class="div-edit-post hidden">
@@ -52,5 +53,20 @@
         {% empty %}
             No post yet!
         {% endfor %}
+        <div class="pagination">
+                {% if posts.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ posts.previous_page_number }}">previous</a>
+                {% endif %}
+        
+                
+                    Page {{ posts.number }} of {{ posts.paginator.num_pages }}.
+                
+        
+                {% if posts.has_next %}
+                    <a href="?page={{ posts.next_page_number }}">next</a>
+                    <a href="?page={{ posts.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+        </div>
     </div>
 {% endblock %}

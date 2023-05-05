@@ -1,12 +1,17 @@
 import json
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
+from django.db.models import Case, When, Value, Count, OuterRef
+from django.db.models.expressions import F
+from itertools import chain
+from django.db.models.functions import JSONObject
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
+from django.core.paginator import Paginator
 
 from .models import User, Post, PostLike, Fallowing
 
@@ -17,7 +22,8 @@ def index(request):
         m_querystring = request.GET.get("p")
         posts = Post.objects.all().order_by("-time")
 
-        if m_querystring and m_querystring == "f":
+        
+        if m_querystring and request.user.is_authenticated and m_querystring == "f":
             my_fallowings = request.user.fallower.all()
 
             # Scan posts and if not in fallowing list of current user, exclude post
@@ -25,24 +31,40 @@ def index(request):
                 fallowing_detect = False
 
                 for fallowing in my_fallowings:
-                    print("if state:", fallowing.user, post.user)
                     if fallowing.user == post.user:
                         fallowing_detect = True
                         
                 if not fallowing_detect:
                     posts = posts.exclude(id = post.id)
-        
-        # Create a list for user's likes and zip it to the post list
-        like_list = []
+
+        # Merge post information and current user's post likes
+        posts_qooked = []
         for post in posts:
-            if post.likes.filter(user = request.user):
-                like_list.append(True)
-            else:
-                like_list.append(False)
+            i_liked = False
+            if request.user.is_authenticated and post.likes.filter(user = request.user):
+                i_liked = True
+            
+            posts_qooked.append({
+                "id": post.id,
+                "user": post.user,
+                "title": post.title,
+                "text": post.text,
+                "time": post.time,
+                "likes": post.likes,
+                "i_liked":i_liked})
 
+        
+        # Create and adjust paginator
 
+        paginator = Paginator(posts_qooked, 10)
+        page_number = request.GET.get('page')
+        if page_number is None:
+            page_number = 1
+        page_obj = paginator.get_page(page_number)
+
+        
         return render(request, "network/index.html", {
-            "posts": zip(posts, like_list)
+            "posts": page_obj
         })
     except Exception as e:
         print("Error, ", e)
