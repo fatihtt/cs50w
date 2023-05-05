@@ -9,6 +9,10 @@
     padding-left: 20px;
     display: flex;
     flex-direction: column;
+    max-width: 500px;
+}
+.div-post {
+    margin: 30px 10px;
 }
 .css-description {
     color: gray;

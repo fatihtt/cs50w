@@ -18,14 +18,16 @@
         {% endif %}
         {% for post in posts %}
             <div class="div-post">
-                <h4>{{ post.title }} {{post.i_liked}}</h4>
+                <h4>{{ post.title }}</h4>
                 {% if user.username == post.user.username %}
                     <a data-postid="{{ post.id }}" class="a-post-edit" href="#">Edit</a>
                 {% endif %}
                 <p class="post-text">
                     {{ post.text }}
                 </p>
-                <p class="css-description">{{ post.user.username }}; {{ post.time }}</p>
+                <p class="css-description">
+                    <a href="{% url 'u' user_name=post.user.username %}">{{ post.user.username }}</a>; {{ post.time }}
+                </p>
                 <p class="p-like">
                     {% if user.is_authenticated and user.username != post.user.username %}
                         <span data-postid="{{ post.id }}" class="material-icons po-pointer {% if post.i_liked %}red {% endif %}favorite">

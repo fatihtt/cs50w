@@ -52,7 +52,7 @@ def index(request):
         
         # Create and adjust paginator
 
-        paginator = Paginator(posts_qooked, 10)
+        paginator = Paginator(posts_qooked, 5)
         page_number = request.GET.get('page')
         if page_number is None:
             page_number = 1
