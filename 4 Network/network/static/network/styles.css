@@ -20,6 +20,17 @@
     gap: 10px;
     margin-bottom: 30px;
 }
+.div-profile-main {
+    margin:30px;
+    display: flex;
+    flex-direction: column;
+    gap:20px;
+}
+.div-user-profile {
+    display: flex;
+    flex-direction: column;
+    gap:10px;
+}
 .hidden {
     display: none;
 }

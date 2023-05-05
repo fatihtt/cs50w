@@ -1,0 +1,39 @@
+{% extends "network/layout.html" %}
+{% load static %}
+
+{% block head %}
+<script src="{% static 'network/view_profile.js' %}"></script>
+{% endblock %}
+
+{% block body %}
+    <div class="div-profile-main">
+        <h1>Profile Page</h1>
+        {% if message %}
+            <div class="message">
+                {{ message }}
+            </div>
+        {% endif %}
+        <div class="div-user-profile">
+            <div class="div-user-username">
+                {{ m_user.username }}
+            </div>
+            <div class="div-user-fallowers">
+                Fallowers: {{ fallowers }}
+            </div>
+            <div class="div-user-fallowings">
+                Fallowings: {{ fallowings }}
+            </div>
+            {% if user.is_authenticated and user.username != m_user.username %}
+            <div class="div-user-fallow">
+                <a data-fallowing="{{ m_user.id }}" href="#" class="a-user-fallow">
+                    {% if imfallowing == 1 %}
+                        Unfallow
+                    {% else %}
+                        Fallow
+                    {% endif %}
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

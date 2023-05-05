@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import User, Post, PostLike
+from .models import User, Post, PostLike, Fallowing
 
 
 def index(request):
@@ -189,4 +189,64 @@ def favorite_toggle(request, post_id):
         else:
             raise Exception("No favorite")
     except Exception as e:
+        return JsonResponse({"error": e}, status=500)
+    
+def view_profile(request, user_name):
+    try:
+        # Take user_name
+        # Find user
+        # Send user information
+        print("username", user_name)
+        if user_name is None:
+            raise Exception("No user name")
+        
+        print("before")
+        try:
+            m_user = User.objects.get(username=user_name)
+        except Exception as e:
+            raise Exception("No user with this name")
+        
+        fallowers = Fallowing.objects.filter(user=m_user).count()
+
+        fallowings = Fallowing.objects.filter(fallower=m_user).count()
+
+        imfallowing = Fallowing.objects.filter(user=m_user, fallower=request.user).count()
+        
+        return render(request, "network/view_profile.html", {
+                          "m_user": m_user,
+                          "fallowers": fallowers,
+                          "fallowings": fallowings,
+                          "imfallowing": imfallowing
+                          })
+
+    except Exception as e:
+        return render(request, "network/view_profile.html", {
+                          "message": e
+                          })
+    
+@csrf_exempt
+@login_required
+def toggle_fallow(request, user_id):
+    # Query for requested user
+    try:
+        m_user = User.objects.get(pk=user_id)
+    except Exception as e:
+        return JsonResponse({"error": "User not found."}, status=404)
+    
+    try:
+        # Check fallowing exist or not
+        fallowing_c = Fallowing.objects.filter(user=m_user, fallower=request.user)
+
+        if fallowing_c.count() > 0:
+            fallowing_c.all().delete()
+        else:
+            new_fallowing = Fallowing(user=m_user, fallower=request.user)
+            new_fallowing.save()
+        
+        # Response all is well
+        return HttpResponse(status=204)
+
+        
+    except Exception as e:
+        print("Error", e)
         return JsonResponse({"error": e}, status=500)
